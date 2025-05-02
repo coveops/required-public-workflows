@@ -93,7 +93,7 @@ jobs:
       pull-requests: write
 
     with:
-      runs-on: "ubuntu-latest"
+      runs-on: '["ubuntu-latest"]'
       retry-on-snapshot-warnings: true
       retry-on-snapshot-warnings-timeout: 120
 
@@ -111,4 +111,4 @@ jobs:
     uses: coveo/public-actions/.github/workflows/dependency-review-v2.yml@main
 
     with:
-      runs-on: "ubuntu-latest"
+      runs-on: '["ubuntu-latest"]'
