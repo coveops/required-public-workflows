@@ -1,0 +1,114 @@
+name: 'Dependency Review'
+
+on: pull_request
+
+permissions: { }
+
+jobs:
+  detect-build-tool:
+    name: Detect Build Tool
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    outputs:
+      is-maven: ${{ steps.check_maven.outputs.is-maven }}
+      is-gradle: ${{ steps.check_gradle.outputs.is-gradle }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check for Maven
+        id: check_maven
+        run: echo "is-maven=$(test -f pom.xml && echo true || echo false)" >> $GITHUB_OUTPUT
+
+      - name: Check for Gradle
+        id: check_gradle
+        run: echo "is-gradle=$(test -f build.gradle || test -f build.gradle.kts && echo true || echo false)" >> $GITHUB_OUTPUT
+
+  dependency-review-maven:
+    needs: detect-build-tool
+
+    if: needs.detect-build-tool.outputs.is-maven == 'true'
+
+    name: Dependency Review - Maven
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    uses: coveo/public-actions/.github/workflows/java-maven-openjdk-dependency-review.yml@main
+    with:
+      runs-on: "ubuntu-latest"
+
+  dependency-submit-gradle:
+    needs: detect-build-tool
+
+    if: needs.detect-build-tool.outputs.is-gradle == 'true'
+
+    name: Dependency Submit - Gradle
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ vars.JAVA_VERSION || 21 }}
+
+      - name: Check gradle wrapper
+        id: check_gradle_wrapper
+        run: echo "has-gradle-wrapper=$(test -f gradlew && echo true || echo false)" >> $GITHUB_OUTPUT
+
+      - name: Generate and submit dependency graph with wrapper
+        if: steps.check_gradle_wrapper.outputs.has-gradle-wrapper == 'true'
+        uses: gradle/actions/dependency-submission@v4
+
+      - name: Generate and submit dependency graph
+        if: steps.check_gradle_wrapper.outputs.has-gradle-wrapper == 'false'
+        uses: gradle/actions/dependency-submission@v4
+        with:
+          # Use a particular Gradle version instead of the configured wrapper.
+          gradle-version: 8.11
+
+  dependency-review-gradle:
+    needs: dependency-submit-gradle
+
+    name: Dependency Review - Gradle
+
+    uses: coveo/public-actions/.github/workflows/dependency-review-v2.yml@main
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    with:
+      runs-on: '["ubuntu-latest"]'
+      retry-on-snapshot-warnings: true
+      retry-on-snapshot-warnings-timeout: 120
+
+  dependency-review-generic:
+    needs: detect-build-tool
+
+    if: needs.detect-build-tool.outputs.is-maven == 'false' && needs.detect-build-tool.outputs.is-gradle == 'false'
+
+    name: Dependency Review - Generic
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    uses: coveo/public-actions/.github/workflows/dependency-review-v2.yml@main
+
+    with:
+      runs-on: '["ubuntu-latest"]'
