@@ -86,7 +86,7 @@ jobs:
 
     name: Dependency Review - Gradle
 
-    uses: coveo/public-actions/.github/workflows/dependency-review-v2.yml@main
+    uses: coveo/public-actions/.github/workflows/dependency-review.yml@main
 
     permissions:
       contents: read
@@ -108,7 +108,7 @@ jobs:
       contents: read
       pull-requests: write
 
-    uses: coveo/public-actions/.github/workflows/dependency-review-v2.yml@main
+    uses: coveo/public-actions/.github/workflows/dependency-review.yml@main
 
     with:
       runs-on: '["ubuntu-latest"]'
