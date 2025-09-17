@@ -18,8 +18,13 @@ jobs:
       is-gradle: ${{ steps.check_gradle.outputs.is-gradle }}
 
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Check for Maven
         id: check_maven
@@ -57,11 +62,16 @@ jobs:
       contents: write
 
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version: ${{ vars.JAVA_VERSION || 21 }}
@@ -72,11 +82,11 @@ jobs:
 
       - name: Generate and submit dependency graph with wrapper
         if: steps.check_gradle_wrapper.outputs.has-gradle-wrapper == 'true'
-        uses: gradle/actions/dependency-submission@v4
+        uses: gradle/actions/dependency-submission@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
 
       - name: Generate and submit dependency graph
         if: steps.check_gradle_wrapper.outputs.has-gradle-wrapper == 'false'
-        uses: gradle/actions/dependency-submission@v4
+        uses: gradle/actions/dependency-submission@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
         with:
           # Use a particular Gradle version instead of the configured wrapper.
           gradle-version: 8.11
